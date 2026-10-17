@@ -1,0 +1,5 @@
+# terraform init -backend-config=backend.hcl
+# Bucket created by bootstrap/state-backend in the prod account (one bucket per account).
+bucket = "ticketing-tfstate-111111111111-us-east-1"
+key    = "ticketing/prod/terraform.tfstate"
+region = "us-east-1"

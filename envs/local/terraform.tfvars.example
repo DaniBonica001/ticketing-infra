@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars (git-ignored).
+owner       = "ticketing-team"
+cost_center = "local"
+
+# Real artifact (built in the application repo) or a placeholder zip for infra-only checks.
+lambda_package_path = "../../../ticketing-platform/ms-reservation-expirer/applications/app-service/build/distributions/ms-reservation-expirer.zip"
+
+# Enable only with the real zip: LocalStack starts a java25 container on every tick.
+expirer_schedule_enabled = false
