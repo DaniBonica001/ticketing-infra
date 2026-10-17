@@ -1,0 +1,31 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.tfvars
+!*.tfvars.example
+
+# Kiro
+.kiro/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+*.tfplan
+
+# Lambda build artifacts
+*.zip
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
