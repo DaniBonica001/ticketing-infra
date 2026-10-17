@@ -94,8 +94,12 @@ resource "aws_api_gateway_integration" "proxy" {
   connection_id           = aws_api_gateway_vpc_link.this.id
   timeout_milliseconds    = var.integration_timeout_ms
 
+  # X-Client-Ip is always overwritten with the caller's source IP, so a client-sent value never reaches the
+  # service. Behind the NLB the TCP peer is the load balancer; the service trusts this header only from the
+  # NLB subnets (TICKETING_RATE_LIMIT_TRUSTED_PROXIES) and uses it as the per-IP rate-limit key.
   request_parameters = {
-    "integration.request.path.proxy" = "method.request.path.proxy"
+    "integration.request.path.proxy"         = "method.request.path.proxy"
+    "integration.request.header.X-Client-Ip" = "context.identity.sourceIp"
   }
 }
 
@@ -109,6 +113,7 @@ resource "aws_api_gateway_deployment" "this" {
       aws_api_gateway_method.proxy.authorization,
       aws_api_gateway_integration.proxy.id,
       aws_api_gateway_integration.proxy.uri,
+      aws_api_gateway_integration.proxy.request_parameters,
     ]))
   }
 

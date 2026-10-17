@@ -12,5 +12,5 @@ Private-only VPC for the ticketing workloads.
 - Optional processor egress to `payment_gateway_cidrs` (PrivateLink or centralized egress), never `0.0.0.0/0`.
 - VPC flow logs (ALL) to a CMK-encrypted log group.
 
-Outputs: `vpc_id`, `vpc_cidr`, `private_subnet_ids`, `security_group_ids` (map), `interface_endpoint_ids`
+Outputs: `vpc_id`, `vpc_cidr`, `private_subnet_ids`, `private_subnet_cidrs`, `security_group_ids` (map), `interface_endpoint_ids`
 (map by service), `dynamodb_endpoint_id`, `flow_logs_log_group_name`.

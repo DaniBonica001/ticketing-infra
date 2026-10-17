@@ -13,6 +13,11 @@ output "private_subnet_ids" {
   value       = [for s in aws_subnet.private : s.id]
 }
 
+output "private_subnet_cidrs" {
+  description = "Private subnet CIDR blocks (one per AZ)."
+  value       = [for s in aws_subnet.private : s.cidr_block]
+}
+
 output "security_group_ids" {
   description = "Security group IDs by role: api, processor, lambda, nlb, endpoints."
   value = {

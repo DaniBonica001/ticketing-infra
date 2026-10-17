@@ -6,9 +6,13 @@ exactly the same permissions.
 
 | Component | Permissions |
 |---|---|
-| `ms-ticketing-api` | Get/Put/Update/ConditionCheck/Query on the 3 tables + GSI, Scan on `ticketing-events`, SendMessage on both queues, KMS via DynamoDB/SQS |
-| `ms-order-processor` | Get/Put/Update/ConditionCheck/Query on the 3 tables, Receive/Delete/ChangeVisibility on both queues, GetSecretValue on `ticketing/payment-gateway`, KMS via DynamoDB/SQS/Secrets Manager |
-| `ticketing-reservation-expirer` | Query on the GSI, Get/Put/Update/ConditionCheck on the tables, SendMessage on both queues + failure destination, KMS via DynamoDB/SQS, env decrypt, own log group, X-Ray, ENI management (VPC) |
+| `ms-ticketing-api` | Get/Put/Update/ConditionCheck/Query on `ticketing-events`/`ticketing-orders` + GSI, PutItem + Query (history) on `ticketing-order-audit`, Scan on `ticketing-events`, SendMessage on both queues, KMS via DynamoDB/SQS |
+| `ms-order-processor` | Get/Put/Update/ConditionCheck/Query on `ticketing-events`/`ticketing-orders`, PutItem only on `ticketing-order-audit`, Receive/Delete/ChangeVisibility on both queues, GetSecretValue on `ticketing/payment-gateway`, KMS via DynamoDB/SQS/Secrets Manager |
+| `ticketing-reservation-expirer` | Query on the GSI, Get/Put/Update/ConditionCheck on `ticketing-events`/`ticketing-orders`, PutItem only on `ticketing-order-audit`, SendMessage on both queues + failure destination, KMS via DynamoDB/SQS, env decrypt, own log group, X-Ray, ENI management (VPC) |
+
+The audit table is append-only: every role gets only `dynamodb:PutItem` on it (needed by the
+`Put` item of each `TransactWriteItems`; the API adds `Query` for the order history). No role can
+update or delete audit rows.
 
 Wildcard resources only where AWS requires them (`ec2:*NetworkInterface*`, X-Ray), commented in place.
 

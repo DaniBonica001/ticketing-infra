@@ -2,19 +2,23 @@
 # Pure policy module (no resources): the least-privilege identity policies of each component,
 # shared by envs/local and envs/prod so both environments grant exactly the same permissions.
 # Resources are always ARNs; the only "*" resources are the ones AWS requires (commented).
-# Note: TransactWriteItems is authorized per item action (PutItem/UpdateItem/ConditionCheckItem).
+# Note: TransactWriteItems is authorized per item action (PutItem/UpdateItem/ConditionCheckItem),
+# so the audit row written inside each transaction needs dynamodb:PutItem on the audit table.
+# The audit table is append-only: no role gets UpdateItem/DeleteItem on it.
 # ============================================================================================
 data "aws_region" "current" {}
 
 locals {
-  region     = data.aws_region.current.region
-  table_arns = [var.events_table_arn, var.orders_table_arn, var.audit_table_arn]
+  region = data.aws_region.current.region
+  # Mutable tables. The audit table is granted separately (append-only).
+  table_arns = [var.events_table_arn, var.orders_table_arn]
   queue_arns = [var.orders_queue_arn, var.confirmations_queue_arn]
 
   dynamodb_write_actions = [
     "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:ConditionCheckItem",
   ]
-  sqs_produce_actions = ["sqs:SendMessage", "sqs:GetQueueAttributes", "sqs:GetQueueUrl"]
+  audit_append_actions = ["dynamodb:PutItem"]
+  sqs_produce_actions  = ["sqs:SendMessage", "sqs:GetQueueAttributes", "sqs:GetQueueUrl"]
   sqs_consume_actions = [
     "sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:ChangeMessageVisibility",
     "sqs:GetQueueAttributes", "sqs:GetQueueUrl",
@@ -51,7 +55,8 @@ data "aws_iam_policy_document" "kms_via_sqs" {
 }
 
 # --------------------------------------------------------------------------------------------
-# ms-ticketing-api: DynamoDB on the 3 tables + GSI, SendMessage on both queues.
+# ms-ticketing-api: DynamoDB on events/orders + GSI, append + history Query on audit,
+# SendMessage on both queues.
 # --------------------------------------------------------------------------------------------
 data "aws_iam_policy_document" "api" {
   source_policy_documents = [
@@ -63,6 +68,13 @@ data "aws_iam_policy_document" "api" {
     sid       = "TablesReadWrite"
     actions   = concat(local.dynamodb_write_actions, ["dynamodb:Query"])
     resources = concat(local.table_arns, [var.orders_gsi_arn])
+  }
+
+  # T1/T8 audit rows (TransactWriteItems Put) and GET /orders/{id}/history (Query by orderId).
+  statement {
+    sid       = "AuditAppendAndHistory"
+    actions   = concat(local.audit_append_actions, ["dynamodb:Query"])
+    resources = [var.audit_table_arn]
   }
 
   statement {
@@ -91,6 +103,13 @@ data "aws_iam_policy_document" "processor" {
     sid       = "TablesReadWrite"
     actions   = concat(local.dynamodb_write_actions, ["dynamodb:Query"])
     resources = local.table_arns
+  }
+
+  # T2/T3/T5/T6 audit rows (TransactWriteItems Put).
+  statement {
+    sid       = "AuditAppend"
+    actions   = local.audit_append_actions
+    resources = [var.audit_table_arn]
   }
 
   statement {
@@ -153,6 +172,13 @@ data "aws_iam_policy_document" "expirer" {
     sid       = "TablesWrite"
     actions   = local.dynamodb_write_actions
     resources = local.table_arns
+  }
+
+  # T7 audit rows (TransactWriteItems Put).
+  statement {
+    sid       = "AuditAppend"
+    actions   = local.audit_append_actions
+    resources = [var.audit_table_arn]
   }
 
   statement {

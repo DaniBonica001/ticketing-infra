@@ -74,6 +74,9 @@ module "svc_api" {
     JWT_AUDIENCE            = var.jwt_audience
     JWT_PUBLIC_KEY_LOCATION = var.jwt_public_key_location
     OTEL_SERVICE_NAME       = local.names.api_service
+    # The internal NLB lives in the private subnets: only from there is X-Client-Ip (set by API Gateway)
+    # trusted as the client IP for the per-IP rate limit.
+    TICKETING_RATE_LIMIT_TRUSTED_PROXIES = join(",", module.network.private_subnet_cidrs)
   })
 
   autoscaling = {
