@@ -7,7 +7,9 @@ Public entry point: **WAFv2 → API Gateway REST API (regional) → VPC link →
   KnownBadInputs, Common). Logs to `aws-waf-logs-*` (CMK) with the `Authorization` header redacted.
 - Stage: throttling (rate/burst), JSON access logs (CMK, retention), X-Ray, execution logs at `ERROR`,
   no data trace, no cache.
-- `{proxy+}` HTTP_PROXY integration over the VPC link.
+- `{proxy+}` HTTP_PROXY integration over the VPC link. The integration overwrites `X-Client-Ip` with
+  `context.identity.sourceIp`; the service trusts it only from the NLB subnets
+  (`TICKETING_RATE_LIMIT_TRUSTED_PROXIES`) and uses it as the per-IP rate-limit key.
 - Authorization: the service validates the JWT (always). `cognito_user_pool_arns` adds a Cognito
   authorizer at the edge (production option, defense in depth).
 - NLB: internal, private subnets, SG with no ingress (PrivateLink inbound evaluation off), egress only
