@@ -1,0 +1,32 @@
+# Copy to terraform.tfvars (git-ignored) and fill in. No real values in the repository.
+environment         = "prod"
+aws_region          = "us-east-1"
+allowed_account_ids = ["111111111111"] # prod workload account
+
+owner       = "ticketing-team"
+cost_center = "CC-0000"
+
+vpc_cidr = "10.40.0.0/16"
+az_count = 3
+
+# Payment gateway over PrivateLink / egress VPC (never 0.0.0.0/0). Empty = no external egress.
+payment_gateway_cidrs = []
+
+# Images pinned by digest (pushed by CI to the ECR repositories in the ecr_repository_urls output).
+api_image       = "111111111111.dkr.ecr.us-east-1.amazonaws.com/ticketing/ms-ticketing-api@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+processor_image = "111111111111.dkr.ecr.us-east-1.amazonaws.com/ticketing/ms-order-processor@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+
+lambda_package_path      = "../../../ticketing-platform/ms-reservation-expirer/applications/app-service/build/distributions/ms-reservation-expirer.zip"
+lambda_snapstart_enabled = false
+
+jwt_issuer              = "https://auth.example.com"
+jwt_audience            = "ticketing-api"
+jwt_public_key_location = "https://auth.example.com/.well-known/jwks.json"
+cognito_user_pool_arns  = []
+
+kms_admin_role_arns   = ["arn:aws:iam::111111111111:role/platform-security-admin"]
+break_glass_role_arns = ["arn:aws:iam::111111111111:role/ticketing-oncall"]
+
+alarm_emails             = ["oncall@example.com"]
+budget_monthly_limit_usd = 1500
+budget_emails            = ["finops@example.com"]
