@@ -10,6 +10,9 @@ Los nombres de recursos, puertos y variables de entorno son los de
 
 ## 1. Arquitectura
 
+Diagrama completo con zonas de red y controles de seguridad (Excalidraw):
+[architecture.png](https://github.com/DaniBonica001/ticketing-platform/blob/develop/docs/diagrams/architecture.png).
+
 ```mermaid
 flowchart LR
     client([Cliente]) -->|HTTPS| waf[AWS WAFv2<br/>rate limit por IP + managed rules]
